@@ -1,5 +1,6 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
+import * as XLSX from 'xlsx';
 
 /**
  * 将记录数组导出为 Excel (.xlsx) 并调用系统分享
@@ -11,12 +12,39 @@ export async function exportToExcel(records) {
     throw new Error('没有可导出的记录');
   }
 
-  // 手动构建 XLSX (SpreadsheetML)，避免在 RN 中引入完整的 xlsx 解析引擎
-  const xml = buildXLSX(records);
-  const path = FileSystem.documentDirectory + '记账明细.xlsx';
+  const rows = [
+    ['序号', '产品编号', '件数', '单价(元)', '总价(元)', '记录时间'],
+    ...records.map((r, i) => [
+      i + 1,
+      r.code,
+      Number(r.qty),
+      Number(r.price),
+      Number(r.total),
+      r.time,
+    ]),
+  ];
 
-  await FileSystem.writeAsStringAsync(path, xml, {
-    encoding: 'utf8',
+  const worksheet = XLSX.utils.aoa_to_sheet(rows);
+  worksheet['!cols'] = [
+    { wch: 8 },
+    { wch: 16 },
+    { wch: 10 },
+    { wch: 12 },
+    { wch: 14 },
+    { wch: 20 },
+  ];
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, '记账明细');
+
+  const path = FileSystem.documentDirectory + '记账明细.xlsx';
+  const workbookBase64 = XLSX.write(workbook, {
+    bookType: 'xlsx',
+    type: 'base64',
+  });
+
+  await FileSystem.writeAsStringAsync(path, workbookBase64, {
+    encoding: 'base64',
   });
 
   const canShare = await Sharing.isAvailableAsync();
@@ -28,51 +56,4 @@ export async function exportToExcel(records) {
   }
 
   return path;
-}
-
-function buildXLSX(records) {
-  const now = new Date().toISOString();
-  const rows = records.map((r, i) => row(i + 1, r));
-
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-  <Worksheet ss:Name="记账明细">
-    <Table>
-      <Row>
-        <Cell><Data ss:Type="String">序号</Data></Cell>
-        <Cell><Data ss:Type="String">产品编号</Data></Cell>
-        <Cell><Data ss:Type="String">件数</Data></Cell>
-        <Cell><Data ss:Type="String">单价(元)</Data></Cell>
-        <Cell><Data ss:Type="String">总价(元)</Data></Cell>
-        <Cell><Data ss:Type="String">记录时间</Data></Cell>
-      </Row>
-${rows}
-    </Table>
-  </Worksheet>
-</Workbook>`;
-}
-
-function row(index, r) {
-  const qty  = Number(r.qty);
-  const price = Number(r.price);
-  const total = (qty * price).toFixed(2);
-
-  return `      <Row>
-        <Cell><Data ss:Type="Number">${index}</Data></Cell>
-        <Cell><Data ss:Type="String">${esc(r.code)}</Data></Cell>
-        <Cell><Data ss:Type="Number">${qty}</Data></Cell>
-        <Cell><Data ss:Type="Number">${price.toFixed(2)}</Data></Cell>
-        <Cell ss:StyleID="total"><Data ss:Type="Number">${total}</Data></Cell>
-        <Cell><Data ss:Type="String">${esc(r.time)}</Data></Cell>
-      </Row>`;
-}
-
-function esc(s) {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }
