@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   FlatList,
+  ScrollView,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -154,123 +155,157 @@ function App() {
         />
       </View>
 
-      {/* 输入卡片 */}
-      <View style={styles.card}>
-        <View style={styles.cardHead}>
-          <Text style={styles.cardTitle}>{currentBill.name} - 新建记录</Text>
-          <TouchableOpacity
-            style={[styles.deleteBillBtn, bills.length <= 1 && styles.deleteBillBtnDisabled]}
-            onPress={deleteCurrentBill}
-            activeOpacity={0.8}
-            disabled={bills.length <= 1}
-          >
-            <Text style={[styles.deleteBillText, bills.length <= 1 && styles.deleteBillTextDisabled]}>删除账单</Text>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.contentInner}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* 输入卡片 */}
+        <View style={styles.card}>
+          <View style={styles.cardHead}>
+            <Text style={styles.cardTitle}>{currentBill.name} - 新建记录</Text>
+            <TouchableOpacity
+              style={[styles.deleteBillBtn, bills.length <= 1 && styles.deleteBillBtnDisabled]}
+              onPress={deleteCurrentBill}
+              activeOpacity={0.8}
+              disabled={bills.length <= 1}
+            >
+              <Text style={[styles.deleteBillText, bills.length <= 1 && styles.deleteBillTextDisabled]}>删除账单</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.row}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>产品编号</Text>
+              <TextInput
+                style={styles.input}
+                value={code}
+                onChangeText={setCode}
+                placeholder="如 A001 或 BX88"
+                placeholderTextColor="#bbb"
+                autoCapitalize="characters"
+              />
+            </View>
+          </View>
+          <View style={styles.row}>
+            <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
+              <Text style={styles.label}>件数</Text>
+              <TextInput
+                style={styles.input}
+                value={qty}
+                onChangeText={setQty}
+                placeholder="0"
+                placeholderTextColor="#bbb"
+                keyboardType="numeric"
+              />
+            </View>
+            <View style={[styles.inputGroup, { flex: 1, marginLeft: 10 }]}>
+              <Text style={styles.label}>单价 (元)</Text>
+              <TextInput
+                style={styles.input}
+                value={price}
+                onChangeText={setPrice}
+                placeholder="0.00"
+                placeholderTextColor="#bbb"
+                keyboardType="decimal-pad"
+              />
+            </View>
+          </View>
+          {/* 实时总价预览 */}
+          <View style={styles.preview}>
+            <Text style={styles.previewLabel}>总价</Text>
+            <Text style={styles.previewValue}>¥ {totalPrice}</Text>
+          </View>
+          <TouchableOpacity style={styles.btn} onPress={addRecord} activeOpacity={0.8}>
+            <Text style={styles.btnText}>添加记录</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.row}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>产品编号</Text>
-            <TextInput
-              style={styles.input}
-              value={code}
-              onChangeText={setCode}
-              placeholder="如 A001 或 BX88"
-              placeholderTextColor="#bbb"
-              autoCapitalize="characters"
-            />
-          </View>
-        </View>
-        <View style={styles.row}>
-          <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
-            <Text style={styles.label}>件数</Text>
-            <TextInput
-              style={styles.input}
-              value={qty}
-              onChangeText={setQty}
-              placeholder="0"
-              placeholderTextColor="#bbb"
-              keyboardType="numeric"
-            />
-          </View>
-          <View style={[styles.inputGroup, { flex: 1, marginLeft: 10 }]}>
-            <Text style={styles.label}>单价 (元)</Text>
-            <TextInput
-              style={styles.input}
-              value={price}
-              onChangeText={setPrice}
-              placeholder="0.00"
-              placeholderTextColor="#bbb"
-              keyboardType="decimal-pad"
-            />
-          </View>
-        </View>
-        {/* 实时总价预览 */}
-        <View style={styles.preview}>
-          <Text style={styles.previewLabel}>总价</Text>
-          <Text style={styles.previewValue}>¥ {totalPrice}</Text>
-        </View>
-        <TouchableOpacity style={styles.btn} onPress={addRecord} activeOpacity={0.8}>
-          <Text style={styles.btnText}>添加记录</Text>
-        </TouchableOpacity>
-      </View>
 
-      {/* 记录列表 */}
-      <View style={styles.listHeader}>
-        <Text style={styles.listTitle}>{currentBill.name} 明细</Text>
-        <Text style={styles.listCount}>{records.length} 条</Text>
-      </View>
-      <FlatList
-        data={records}
-        keyExtractor={item => item.id}
-        style={styles.list}
-        contentContainerStyle={records.length === 0 ? styles.emptyContainer : undefined}
-        ListEmptyComponent={<Text style={styles.empty}>暂无记录，上方添加第一条</Text>}
-        renderItem={({ item }) => (
-          <View style={styles.recordCard}>
-            <View style={styles.recordTop}>
-              <Text style={styles.recordCode}>{item.code}</Text>
-              <TouchableOpacity onPress={() => deleteRecord(item.id)}>
-                <Text style={styles.deleteBtn}>删除</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.recordBody}>
-              <View style={styles.recordCol}>
-                <Text style={styles.recordLabel}>件数</Text>
-                <Text style={styles.recordValue}>{item.qty}</Text>
-              </View>
-              <View style={styles.recordCol}>
-                <Text style={styles.recordLabel}>单价</Text>
-                <Text style={styles.recordValue}>¥{item.price.toFixed(2)}</Text>
-              </View>
-              <View style={styles.recordCol}>
-                <Text style={styles.recordLabel}>总价</Text>
-                <Text style={[styles.recordValue, styles.recordTotal]}>¥{item.total.toFixed(2)}</Text>
-              </View>
-            </View>
-            <Text style={styles.recordTime}>{item.time}</Text>
+        {/* 记录列表 */}
+        <View style={styles.section}>
+          <View style={styles.listHeader}>
+            <Text style={styles.listTitle}>{currentBill.name} 明细</Text>
+            <Text style={styles.listCount}>{records.length} 条</Text>
           </View>
-        )}
-      />
+          <View style={styles.list}>
+            {records.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.empty}>暂无记录，上方添加第一条</Text>
+              </View>
+            ) : records.map(item => (
+              <View key={item.id} style={styles.recordCard}>
+                <View style={styles.recordTop}>
+                  <Text style={styles.recordCode}>{item.code}</Text>
+                  <TouchableOpacity onPress={() => deleteRecord(item.id)}>
+                    <Text style={styles.deleteBtn}>删除</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.recordBody}>
+                  <View style={styles.recordCol}>
+                    <Text style={styles.recordLabel}>件数</Text>
+                    <Text style={styles.recordValue}>{item.qty}</Text>
+                  </View>
+                  <View style={styles.recordCol}>
+                    <Text style={styles.recordLabel}>单价</Text>
+                    <Text style={styles.recordValue}>¥{item.price.toFixed(2)}</Text>
+                  </View>
+                  <View style={styles.recordCol}>
+                    <Text style={styles.recordLabel}>总价</Text>
+                    <Text style={[styles.recordValue, styles.recordTotal]}>¥{item.total.toFixed(2)}</Text>
+                  </View>
+                </View>
+                <Text style={styles.recordTime}>{item.time}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
 
-      {/* 底部栏 */}
-      <View style={styles.footer}>
-        <View style={styles.sumBox}>
-          <Text style={styles.sumLabel}>当前账单合计</Text>
-          <Text style={styles.sumValue}>¥ {sumTotal.toFixed(2)}</Text>
+        <View style={styles.section}>
+          <View style={styles.listHeader}>
+            <Text style={styles.listTitle}>账单汇总</Text>
+            <Text style={styles.listCount}>{bills.length} 个</Text>
+          </View>
+          <View style={styles.billSummaryList}>
+            {bills.map(bill => {
+              const billTotal = bill.records.reduce((s, r) => s + r.total, 0);
+              const isActive = bill.id === currentBill.id;
+              return (
+                <TouchableOpacity
+                  key={bill.id}
+                  style={[styles.billSummaryCard, isActive && styles.billSummaryCardActive]}
+                  onPress={() => setCurrentBillId(bill.id)}
+                  activeOpacity={0.8}
+                >
+                  <View>
+                    <Text style={[styles.billSummaryName, isActive && styles.billSummaryNameActive]}>{bill.name}</Text>
+                    <Text style={styles.billSummaryMeta}>{bill.records.length} 条记录</Text>
+                  </View>
+                  <Text style={[styles.billSummaryTotal, isActive && styles.billSummaryTotalActive]}>¥ {billTotal.toFixed(2)}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
-        <View style={styles.sumBox}>
-          <Text style={styles.sumLabel}>全部账单总计</Text>
-          <Text style={styles.allSumValue}>¥ {allBillsTotal.toFixed(2)}</Text>
+
+        {/* 底部栏 */}
+        <View style={styles.footer}>
+          <View style={styles.sumBox}>
+            <Text style={styles.sumLabel}>当前账单合计</Text>
+            <Text style={styles.sumValue}>¥ {sumTotal.toFixed(2)}</Text>
+          </View>
+          <View style={styles.sumBox}>
+            <Text style={styles.sumLabel}>全部账单总计</Text>
+            <Text style={styles.allSumValue}>¥ {allBillsTotal.toFixed(2)}</Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.btn, styles.exportBtn, records.length === 0 && styles.btnDisabled]}
+            onPress={handleExport}
+            activeOpacity={0.8}
+            disabled={records.length === 0}
+          >
+            <Text style={styles.btnText}>导出 Excel</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={[styles.btn, styles.exportBtn, records.length === 0 && styles.btnDisabled]}
-          onPress={handleExport}
-          activeOpacity={0.8}
-          disabled={records.length === 0}
-        >
-          <Text style={styles.btnText}>导出 Excel</Text>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -296,6 +331,8 @@ const styles = {
   headerSub:        { fontSize: 13, color: C.muted, marginTop: 4 },
   billBar:          { backgroundColor: C.white, borderBottomWidth: 1, borderColor: C.border },
   billList:         { paddingHorizontal: 16, paddingVertical: 12, alignItems: 'center' },
+  content:          { flex: 1 },
+  contentInner:     { paddingBottom: 24 },
   billChip:         { minWidth: 112, paddingVertical: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: C.border, borderRadius: 8, marginRight: 10, backgroundColor: C.bg },
   billChipActive:   { borderColor: C.primary, backgroundColor: '#eef6ff' },
   billChipName:     { fontSize: 14, color: C.text, fontWeight: '600' },
@@ -324,8 +361,9 @@ const styles = {
   listHeader:       { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 8 },
   listTitle:        { fontSize: 16, fontWeight: '600', color: C.text },
   listCount:        { fontSize: 13, color: C.muted },
-  list:             { flex: 1, paddingHorizontal: 16 },
-  emptyContainer:   { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  section:          { marginBottom: 12 },
+  list:             { paddingHorizontal: 16 },
+  emptyContainer:   { minHeight: 86, justifyContent: 'center', alignItems: 'center', backgroundColor: C.white, borderRadius: 10, marginHorizontal: 16, borderWidth: 1, borderColor: C.border },
   empty:            { color: C.muted, fontSize: 14 },
   recordCard:       { backgroundColor: C.white, borderRadius: 10, padding: 16, marginBottom: 10, shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
   recordTop:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
@@ -337,6 +375,14 @@ const styles = {
   recordValue:      { fontSize: 15, color: C.text, fontWeight: '500' },
   recordTotal:      { color: C.primary, fontWeight: '700' },
   recordTime:       { fontSize: 11, color: '#bbb' },
+  billSummaryList:  { paddingHorizontal: 16 },
+  billSummaryCard:  { backgroundColor: C.white, borderRadius: 10, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: C.border, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  billSummaryCardActive: { borderColor: C.primary, backgroundColor: '#eef6ff' },
+  billSummaryName:  { fontSize: 15, fontWeight: '700', color: C.text },
+  billSummaryNameActive: { color: C.primary },
+  billSummaryMeta:  { fontSize: 12, color: C.muted, marginTop: 4 },
+  billSummaryTotal: { fontSize: 17, fontWeight: '700', color: C.text },
+  billSummaryTotalActive: { color: C.primary },
   footer:           { backgroundColor: C.white, padding: 16, paddingBottom: 32, borderTopWidth: 1, borderColor: C.border },
   sumBox:           { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   sumLabel:         { fontSize: 15, color: C.text, fontWeight: '500' },

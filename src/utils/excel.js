@@ -12,6 +12,8 @@ export async function exportToExcel(records) {
     throw new Error('没有可导出的记录');
   }
 
+  const totalAmount = records.reduce((sum, r) => sum + Number(r.total || 0), 0);
+  const totalRowNumber = records.length + 3;
   const rows = [
     ['序号', '产品编号', '件数', '单价(元)', '总价(元)', '记录时间'],
     ...records.map((r, i) => [
@@ -22,9 +24,13 @@ export async function exportToExcel(records) {
       Number(r.total),
       r.time,
     ]),
+    [],
+    ['', '', '', '合计', { f: `SUM(E2:E${records.length + 1})`, v: totalAmount, t: 'n' }, ''],
   ];
 
   const worksheet = XLSX.utils.aoa_to_sheet(rows);
+  worksheet[`D${totalRowNumber}`].s = { font: { bold: true } };
+  worksheet[`E${totalRowNumber}`].s = { font: { bold: true } };
   worksheet['!cols'] = [
     { wch: 8 },
     { wch: 16 },
