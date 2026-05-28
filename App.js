@@ -10,9 +10,10 @@ import {
   Platform,
   StatusBar,
 } from 'react-native';
+import { registerRootComponent } from 'expo';
 import { exportToExcel } from './src/utils/excel';
 
-export default function App() {
+function App() {
   const [code, setCode] = useState('');
   const [qty, setQty] = useState('');
   const [price, setPrice] = useState('');
@@ -229,3 +230,5 @@ const styles = {
   sumValue:         { fontSize: 22, fontWeight: '700', color: C.primary },
   exportBtn:        { marginTop: 0 },
 };
+
+registerRootComponent(App);
