@@ -77,6 +77,31 @@ function App() {
     setPrice('');
   };
 
+  const deleteCurrentBill = () => {
+    if (bills.length <= 1) {
+      Alert.alert('提示', '至少保留一个账单');
+      return;
+    }
+
+    Alert.alert('删除账单', `确定删除 ${currentBill.name} 吗？`, [
+      { text: '取消', style: 'cancel' },
+      {
+        text: '删除',
+        style: 'destructive',
+        onPress: () => {
+          const currentIndex = bills.findIndex(bill => bill.id === currentBill.id);
+          const nextBills = bills.filter(bill => bill.id !== currentBill.id);
+          const nextIndex = Math.max(0, currentIndex - 1);
+          setBills(nextBills);
+          setCurrentBillId(nextBills[nextIndex].id);
+          setCode('');
+          setQty('');
+          setPrice('');
+        },
+      },
+    ]);
+  };
+
   const handleExport = async () => {
     try {
       await exportToExcel(records);
@@ -131,7 +156,17 @@ function App() {
 
       {/* 输入卡片 */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>{currentBill.name} - 新建记录</Text>
+        <View style={styles.cardHead}>
+          <Text style={styles.cardTitle}>{currentBill.name} - 新建记录</Text>
+          <TouchableOpacity
+            style={[styles.deleteBillBtn, bills.length <= 1 && styles.deleteBillBtnDisabled]}
+            onPress={deleteCurrentBill}
+            activeOpacity={0.8}
+            disabled={bills.length <= 1}
+          >
+            <Text style={[styles.deleteBillText, bills.length <= 1 && styles.deleteBillTextDisabled]}>删除账单</Text>
+          </TouchableOpacity>
+        </View>
         <View style={styles.row}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>产品编号</Text>
@@ -270,7 +305,12 @@ const styles = {
   addBillBtn:       { height: 52, paddingHorizontal: 14, borderRadius: 8, borderWidth: 1, borderColor: C.primary, justifyContent: 'center', alignItems: 'center' },
   addBillText:      { color: C.primary, fontSize: 14, fontWeight: '600' },
   card:             { backgroundColor: C.white, margin: 16, borderRadius: 12, padding: 20, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
-  cardTitle:        { fontSize: 16, fontWeight: '600', color: C.text, marginBottom: 16 },
+  cardHead:         { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  cardTitle:        { flex: 1, fontSize: 16, fontWeight: '600', color: C.text },
+  deleteBillBtn:    { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: C.danger, marginLeft: 10 },
+  deleteBillBtnDisabled: { borderColor: C.border },
+  deleteBillText:   { color: C.danger, fontSize: 13, fontWeight: '600' },
+  deleteBillTextDisabled: { color: C.muted },
   row:              { flexDirection: 'row', marginBottom: 12 },
   inputGroup:       { flex: 1 },
   label:            { fontSize: 13, color: C.muted, marginBottom: 6 },
