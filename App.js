@@ -17,9 +17,21 @@ function App() {
   const [code, setCode] = useState('');
   const [qty, setQty] = useState('');
   const [price, setPrice] = useState('');
-  const [records, setRecords] = useState([]);
+  const [bills, setBills] = useState([{ id: 'bill-1', name: '账单1', records: [] }]);
+  const [currentBillId, setCurrentBillId] = useState('bill-1');
+
+  const currentBill = bills.find(bill => bill.id === currentBillId) || bills[0];
+  const records = currentBill.records;
 
   const totalPrice = qty && price ? (parseFloat(qty) * parseFloat(price)).toFixed(2) : '0.00';
+
+  const updateCurrentBillRecords = (updater) => {
+    setBills(prev => prev.map(bill => {
+      if (bill.id !== currentBill.id) return bill;
+      const nextRecords = typeof updater === 'function' ? updater(bill.records) : updater;
+      return { ...bill, records: nextRecords };
+    }));
+  };
 
   const addRecord = () => {
     const trimmedCode = code.trim();
@@ -34,7 +46,7 @@ function App() {
 
     const now = new Date();
     const time = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    setRecords(prev => [{
+    updateCurrentBillRecords(prev => [{
       id: Date.now().toString(),
       code: trimmedCode,
       qty: qtyNum,
@@ -48,7 +60,21 @@ function App() {
   };
 
   const deleteRecord = (id) => {
-    setRecords(prev => prev.filter(r => r.id !== id));
+    updateCurrentBillRecords(prev => prev.filter(r => r.id !== id));
+  };
+
+  const createBill = () => {
+    const nextIndex = bills.length + 1;
+    const bill = {
+      id: `bill-${Date.now()}`,
+      name: `账单${nextIndex}`,
+      records: [],
+    };
+    setBills(prev => [...prev, bill]);
+    setCurrentBillId(bill.id);
+    setCode('');
+    setQty('');
+    setPrice('');
   };
 
   const handleExport = async () => {
@@ -60,6 +86,10 @@ function App() {
   };
 
   const sumTotal = records.reduce((s, r) => s + r.total, 0);
+  const allBillsTotal = bills.reduce(
+    (sum, bill) => sum + bill.records.reduce((billSum, r) => billSum + r.total, 0),
+    0
+  );
 
   return (
     <View style={styles.container}>
@@ -70,9 +100,38 @@ function App() {
         <Text style={styles.headerSub}>记录每一笔工序收入</Text>
       </View>
 
+      <View style={styles.billBar}>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={bills}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.billList}
+          renderItem={({ item }) => {
+            const isActive = item.id === currentBill.id;
+            const billTotal = item.records.reduce((s, r) => s + r.total, 0);
+            return (
+              <TouchableOpacity
+                style={[styles.billChip, isActive && styles.billChipActive]}
+                onPress={() => setCurrentBillId(item.id)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.billChipName, isActive && styles.billChipNameActive]}>{item.name}</Text>
+                <Text style={[styles.billChipTotal, isActive && styles.billChipTotalActive]}>¥{billTotal.toFixed(2)}</Text>
+              </TouchableOpacity>
+            );
+          }}
+          ListFooterComponent={
+            <TouchableOpacity style={styles.addBillBtn} onPress={createBill} activeOpacity={0.8}>
+              <Text style={styles.addBillText}>+ 新账单</Text>
+            </TouchableOpacity>
+          }
+        />
+      </View>
+
       {/* 输入卡片 */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>新建记录</Text>
+        <Text style={styles.cardTitle}>{currentBill.name} - 新建记录</Text>
         <View style={styles.row}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>产品编号</Text>
@@ -122,7 +181,7 @@ function App() {
 
       {/* 记录列表 */}
       <View style={styles.listHeader}>
-        <Text style={styles.listTitle}>记录明细</Text>
+        <Text style={styles.listTitle}>{currentBill.name} 明细</Text>
         <Text style={styles.listCount}>{records.length} 条</Text>
       </View>
       <FlatList
@@ -161,8 +220,12 @@ function App() {
       {/* 底部栏 */}
       <View style={styles.footer}>
         <View style={styles.sumBox}>
-          <Text style={styles.sumLabel}>合计</Text>
+          <Text style={styles.sumLabel}>当前账单合计</Text>
           <Text style={styles.sumValue}>¥ {sumTotal.toFixed(2)}</Text>
+        </View>
+        <View style={styles.sumBox}>
+          <Text style={styles.sumLabel}>全部账单总计</Text>
+          <Text style={styles.allSumValue}>¥ {allBillsTotal.toFixed(2)}</Text>
         </View>
         <TouchableOpacity
           style={[styles.btn, styles.exportBtn, records.length === 0 && styles.btnDisabled]}
@@ -196,6 +259,16 @@ const styles = {
   header:           { backgroundColor: C.white, paddingTop: 56, paddingBottom: 20, paddingHorizontal: 20, borderBottomWidth: 1, borderColor: C.border },
   headerTitle:      { fontSize: 24, fontWeight: '700', color: C.text },
   headerSub:        { fontSize: 13, color: C.muted, marginTop: 4 },
+  billBar:          { backgroundColor: C.white, borderBottomWidth: 1, borderColor: C.border },
+  billList:         { paddingHorizontal: 16, paddingVertical: 12, alignItems: 'center' },
+  billChip:         { minWidth: 112, paddingVertical: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: C.border, borderRadius: 8, marginRight: 10, backgroundColor: C.bg },
+  billChipActive:   { borderColor: C.primary, backgroundColor: '#eef6ff' },
+  billChipName:     { fontSize: 14, color: C.text, fontWeight: '600' },
+  billChipNameActive: { color: C.primary },
+  billChipTotal:    { fontSize: 12, color: C.muted, marginTop: 3 },
+  billChipTotalActive: { color: C.primary },
+  addBillBtn:       { height: 52, paddingHorizontal: 14, borderRadius: 8, borderWidth: 1, borderColor: C.primary, justifyContent: 'center', alignItems: 'center' },
+  addBillText:      { color: C.primary, fontSize: 14, fontWeight: '600' },
   card:             { backgroundColor: C.white, margin: 16, borderRadius: 12, padding: 20, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
   cardTitle:        { fontSize: 16, fontWeight: '600', color: C.text, marginBottom: 16 },
   row:              { flexDirection: 'row', marginBottom: 12 },
@@ -228,6 +301,7 @@ const styles = {
   sumBox:           { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   sumLabel:         { fontSize: 15, color: C.text, fontWeight: '500' },
   sumValue:         { fontSize: 22, fontWeight: '700', color: C.primary },
+  allSumValue:      { fontSize: 18, fontWeight: '700', color: C.text },
   exportBtn:        { marginTop: 0 },
 };
 

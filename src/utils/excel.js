@@ -16,7 +16,7 @@ export async function exportToExcel(records) {
   const path = FileSystem.documentDirectory + '记账明细.xlsx';
 
   await FileSystem.writeAsStringAsync(path, xml, {
-    encoding: FileSystem.EncodingType.UTF8,
+    encoding: 'utf8',
   });
 
   const canShare = await Sharing.isAvailableAsync();
