@@ -122,7 +122,7 @@ function App() {
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       {/* 顶部 */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>服装加工记账</Text>
+        <Text style={styles.headerTitle}>记账星</Text>
         <Text style={styles.headerSub}>记录每一笔工序收入</Text>
       </View>
 

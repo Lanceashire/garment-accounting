@@ -1,13 +1,15 @@
-# 服装加工记账
+# 记账星
 
-服务于服装加工行业的移动端记账工具。快速录入工序信息，自动计算总价，一键导出 Excel 报表。
+面向服装加工场景的 Android 移动端记账工具。支持按账单分组记录加工收入，自动计算每条记录总价、当前账单合计和全部账单总计，并可导出真正的 `.xlsx` Excel 文件。
 
 ## 功能
 
-- **产品编号** — 支持纯数字 / 英文 / 英文+数字（如 A001、BX88）
-- **件数 & 单价** — 录入后实时预览总价
-- **记录管理** — 增删记录，自动合计总金额
-- **Excel 导出** — 生成 .xlsx 文件并通过系统分享
+- **多账单管理**：可新建、切换、删除账单，至少保留一个账单。
+- **加工记录录入**：输入产品编号、件数、单价，实时预览单条总价。
+- **明细查看**：当前账单下的每一笔记录都会显示在明细区，页面支持上下滑动查看。
+- **金额统计**：自动统计当前账单合计和全部账单总计。
+- **Excel 导出**：导出标准 `.xlsx` 文件，包含序号、产品编号、件数、单价、总价、记录时间和合计行。
+- **系统分享**：导出后可通过微信、QQ、文件管理器等方式发送。
 
 ## 技术栈
 
@@ -15,59 +17,71 @@
 |---|---|
 | 框架 | React Native + Expo |
 | 平台 | Android |
-| Excel | SpreadsheetML (Office XML) |
-| 文件/分享 | expo-file-system + expo-sharing |
+| Excel | xlsx |
+| 文件/分享 | expo-file-system/legacy + expo-sharing |
 
 ## 快速开始
 
-### 1. 安装依赖
+### 安装依赖
 
 ```bash
-cd garment-accounting
 npm install
 ```
 
-### 2. 启动开发服务器
+### 启动开发服务
 
 ```bash
 npx expo start
 ```
 
-然后：
-- 用 **Expo Go** 扫码 (Android 手机上安装 Expo Go)
-- 或按 `a` 通过 USB 连接的 Android 设备/模拟器运行
-
-### 3. 构建 APK (可选)
+可使用 Expo Go 扫码调试，或通过 USB 连接 Android 设备后运行：
 
 ```bash
-npx expo build:android
+npx expo run:android
+```
+
+## 构建 APK
+
+本项目已生成 Android 原生工程，可在本机执行：
+
+```bash
+cd android
+.\gradlew.bat assembleRelease
+```
+
+当前 APK 输出位置：
+
+```text
+android/app/build/outputs/apk/release/app-release.apk
 ```
 
 ## 项目结构
 
-```
+```text
 garment-accounting/
-├── App.js                 # 主入口，界面与逻辑
+├── App.js                 # 主入口，界面与记账逻辑
 ├── app.json               # Expo 配置
 ├── package.json           # 依赖清单
-├── babel.config.js
-├── assets/                # 图标等静态资源
+├── assets/
+│   └── icon.png           # 应用图标
+├── android/               # Android 原生工程
 └── src/
     └── utils/
-        └── excel.js       # Excel 导出 (SpreadsheetML)
+        └── excel.js       # Excel 导出逻辑
 ```
 
 ## 使用说明
 
-1. 输入 **产品编号**（字母/数字组合，如 XH202）
-2. 输入 **件数**（整数）
-3. 输入 **单价**（元，支持小数）
-4. 点击 **添加记录**
-5. 重复录入多条记录
-6. 点击底部 **导出 Excel**，通过微信/邮件等方式发送
+1. 选择或新建一个账单。
+2. 输入产品编号、件数、单价。
+3. 点击 **添加记录**。
+4. 在账单明细中查看每一笔记录。
+5. 需要分组时点击 **+ 新账单**。
+6. 点击 **导出 Excel** 生成并分享当前账单的 Excel 明细。
 
 ## 环境要求
 
 - Node.js >= 18
-- Android SDK (已配置于 `C:\Users\lenovo\AppData\Local\Android\Sdk`)
-- Expo Go 手机端 App (开发调试用)
+- Android SDK
+- JDK 21 或兼容 Android Gradle 构建的 JDK
+
